@@ -12,7 +12,7 @@ Controllers are provisioned to run an `etcd-member` peer and a `kubelet` service
 * PXE-enabled [network boot](https://coreos.com/matchbox/docs/latest/network-setup.html) environment (with HTTPS support)
 * Matchbox v0.6+ deployment with API enabled
 * Matchbox credentials `client.crt`, `client.key`, `ca.crt`
-* Terraform v0.11.x, [terraform-provider-matchbox](https://github.com/poseidon/terraform-provider-matchbox), and [terraform-provider-ct](https://github.com/poseidon/terraform-provider-ct) installed locally
+* Terraform v0.12.x, [terraform-provider-matchbox](https://github.com/poseidon/terraform-provider-matchbox), and [terraform-provider-ct](https://github.com/poseidon/terraform-provider-ct) installed locally
 
 ## Machines
 
@@ -107,19 +107,19 @@ Read about the [many ways](https://coreos.com/matchbox/docs/latest/network-setup
 
 ## Terraform Setup
 
-Install [Terraform](https://www.terraform.io/downloads.html) v0.11.x on your system.
+Install [Terraform](https://www.terraform.io/downloads.html) v0.12.x on your system.
 
 ```sh
 $ terraform version
-Terraform v0.11.13
+Terraform v0.12.17
 ```
 
 Add the [terraform-provider-matchbox](https://github.com/poseidon/terraform-provider-matchbox) plugin binary for your system to `~/.terraform.d/plugins/`, noting the final name.
 
 ```sh
-wget https://github.com/poseidon/terraform-provider-matchbox/releases/download/v0.2.3/terraform-provider-matchbox-v0.2.3-linux-amd64.tar.gz
-tar xzf terraform-provider-matchbox-v0.2.3-linux-amd64.tar.gz
-mv terraform-provider-matchbox-v0.2.3-linux-amd64/terraform-provider-matchbox ~/.terraform.d/plugins/terraform-provider-matchbox_v0.2.3
+wget https://github.com/poseidon/terraform-provider-matchbox/releases/download/v0.3.0/terraform-provider-matchbox-v0.3.0-linux-amd64.tar.gz
+tar xzf terraform-provider-matchbox-v0.3.0-linux-amd64.tar.gz
+mv terraform-provider-matchbox-v0.3.0-linux-amd64/terraform-provider-matchbox ~/.terraform.d/plugins/terraform-provider-matchbox_v0.3.0
 ```
 
 Add the [terraform-provider-ct](https://github.com/poseidon/terraform-provider-ct) plugin binary for your system to `~/.terraform.d/plugins/`, noting the final name.
@@ -142,7 +142,7 @@ Configure the Matchbox provider to use your Matchbox API endpoint and client cer
 
 ```tf
 provider "matchbox" {
-  version     = "0.2.3"
+  version     = "0.3.0"
   endpoint    = "matchbox.example.com:8081"
   client_cert = "${file("~/.config/matchbox/client.crt")}"
   client_key  = "${file("~/.config/matchbox/client.key")}"
@@ -183,10 +183,10 @@ module "bare-metal-mercury" {
   source = "git::https://github.com/kinvolk/lokomotive-kubernetes//bare-metal/flatcar-linux/kubernetes?ref=<hash>"
 
   providers = {
-    local = "local.default"
-    null = "null.default"
-    template = "template.default"
-    tls = "tls.default"
+    local = local.default
+    null = null.default
+    template = template.default
+    tls = tls.default
   }
 
   # bare-metal
