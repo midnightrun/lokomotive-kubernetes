@@ -70,15 +70,15 @@ $ newgrp libvirt
 
 ## Terraform Setup
 
-Install [Terraform](https://www.terraform.io/downloads.html) v0.11.x on your system.
+Install [Terraform](https://www.terraform.io/downloads.html) v0.12.x on your system.
 
 ```sh
 $ terraform version
-Terraform v0.11.13
+Terraform v0.12.17
 ```
 
 Add the [terraform-provider-ct](https://github.com/poseidon/terraform-provider-ct) plugin binary for your system
-to `~/.terraform.d/plugins/`, noting the `_v0.3.1` suffix.
+to `~/.terraform.d/plugins/`, noting the `_v0.4.0` suffix.
 
 ```sh
 wget https://github.com/poseidon/terraform-provider-ct/releases/download/v0.4.0/terraform-provider-ct-v0.4.0-linux-amd64.tar.gz
@@ -86,29 +86,13 @@ tar xzf terraform-provider-ct-v0.4.0-linux-amd64.tar.gz
 mv terraform-provider-ct-v0.4.0-linux-amd64/terraform-provider-ct ~/.terraform.d/plugins/terraform-provider-ct_v0.4.0
 ```
 
-Add the [terraform-provider-libvirt](https://github.com/dmacvicar/terraform-provider-libvirt) plugin binary for your system
-to `~/.terraform.d/plugins/`, noting the `_v0.5.3` suffix. As long as this version is unreleased you have to build the plugin
-yourself. The version must include the `fw_cfg_name` feature as well as the experimental
-[pool definition feature](https://github.com/dmacvicar/terraform-provider-libvirt/commit/9f00f3d46c489f24c71d02fde816f5fda34d3f7c).
-
-When building from source, you have to do a final `mv $GOPATH/bin/terraform-provider-libvirt ~/.terraform.d/plugins/terraform-provider-libvirt_v0.5.3`:
+You can download the tar file for your distribution from the [release page](https://github.com/dmacvicar/terraform-provider-libvirt/releases):
 
 ```sh
-$ # From any (even temporary) directory
-$ git clone https://github.com/dmacvicar/terraform-provider-libvirt.git
-$ export GO111MODULE=on
-$ export GOFLAGS=-mod=vendor
-$ make install
-$ mv "$GOPATH/bin/terraform-provider-libvirt" ~/.terraform.d/plugins/terraform-provider-libvirt_v0.5.3
-```
-
-In the future you can download the tar file for your distribution from the [release page](https://github.com/dmacvicar/terraform-provider-libvirt/releases):
-
-```sh
-wget https://github.com/dmacvicar/terraform-provider-libvirt/releases/download/v0.5.3/terraform-provider-libvirt-0.5.3.Fedora_28.x86_64.tar.gz
-# or, e.g., https://github.com/dmacvicar/terraform-provider-libvirt/releases/download/v0.5.2/terraform-provider-libvirt-0.5.3.Ubuntu_18.04.amd64.tar.gz
-tar xzf terraform-provider-libvirt-0.5.3.Fedora_28.x86_64.tar.gz
-mv terraform-provider-libvirt ~/.terraform.d/plugins/terraform-provider-libvirt_v0.5.3
+wget https://github.com/dmacvicar/terraform-provider-libvirt/releases/download/v0.6.0/terraform-provider-libvirt-0.6.0+git.1569597268.1c8597df.Fedora_28.x86_64.tar.gz
+# or, e.g., https://github.com/dmacvicar/terraform-provider-libvirt/releases/download/v0.6.0/terraform-provider-libvirt-0.6.0+git.1569597268.1c8597df.Ubuntu_18.04.amd64.tar.gz
+tar xzf terraform-provider-libvirt-0.6.0+git.1569597268.1c8597df.Fedora_28.x86_64.tar.gz
+mv terraform-provider-libvirt ~/.terraform.d/plugins/terraform-provider-libvirt_v0.6.0
 ```
 
 
@@ -152,7 +136,7 @@ provider "tls" {
 }
 
 provider "libvirt" {
-  version = "~> 0.5.3"
+  version = "~> 0.6.0"
   uri     = "qemu:///system"
   alias   = "default"
 }
@@ -170,11 +154,11 @@ module "controller" {
   source = "git::https://github.com/kinvolk/lokomotive-kubernetes//kvm-libvirt/flatcar-linux/kubernetes"
 
   providers = {
-    local    = "local.default"
-    null     = "null.default"
-    template = "template.default"
-    tls      = "tls.default"
-    libvirt  = "libvirt.default"
+    local    = local.default
+    null     = null.default
+    template = template.default
+    tls      = tls.default
+    libvirt  = libvirt.default
   }
 
   # Path to where the image was prepared, note the triple slash for the absolute path
@@ -193,31 +177,30 @@ module "controller" {
   node_ip_pool = "192.168.192.0/24"
 
   controller_count = 1
-
 }
 
 module "worker-pool-one" {
   source = "git::https://github.com/kinvolk/lokomotive-kubernetes//kvm-libvirt/flatcar-linux/kubernetes/workers"
 
   providers = {
-    local    = "local.default"
-    template = "template.default"
-    tls      = "tls.default"
-    libvirt  = "libvirt.default"
+    local    = local.default
+    template = template.default
+    tls      = tls.default
+    libvirt  = libvirt.default
   }
 
-  ssh_keys = "${module.controller.ssh_keys}"
+  ssh_keys = "module.controller.ssh_keys
 
-  machine_domain = "${module.controller.machine_domain}"
-  cluster_name = "${module.controller.cluster_name}"
-  libvirtpool = "${module.controller.libvirtpool}"
-  libvirtbaseid = "${module.controller.libvirtbaseid}"
+  machine_domain = module.controller.machine_domain
+  cluster_name = module.controller.cluster_name
+  libvirtpool = module.controller.libvirtpool
+  libvirtbaseid = module.controller.libvirtbaseid
 
   pool_name = "one"
 
-  count = 1
+  worker_count = 1
 
-  kubeconfig = "${module.controller.kubeconfig}"
+  kubeconfig = module.controller.kubeconfig
 
   labels = "node.supernova.io/role=backend"
 }
@@ -357,7 +340,7 @@ source.
 #### Optional
 | Name | Description | Default |
 |:-----|:------------|:--------|
-| count | Number of worker VMs | "1" |
+| worker_count | Number of worker VMs | "1" |
 | cluster_domain_suffix | The cluster's suffix answered by coredns | "cluster.local" |
 | labels | Custom label to assign to worker nodes. Provide comma separated key=value pairs as labels. e.g. 'foo=oof,bar=,baz=zab'" | "" |
 | service_cidr | CIDR IPv4 range to assign Kubernetes services. The 1st IP will be reserved for kube_apiserver, the 10th IP will be reserved for coredns. | "10.2.0.0/16" |
