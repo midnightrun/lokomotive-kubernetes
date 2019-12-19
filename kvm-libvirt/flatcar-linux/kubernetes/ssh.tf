@@ -4,10 +4,7 @@ resource "null_resource" "copy-controller-secrets" {
 
   connection {
     type = "ssh"
-    host = element(
-      libvirt_domain.controller-machine.*.network_interface.0.addresses.0,
-      count.index,
-    )
+    host = libvirt_domain.controller-machine[count.index].network_interface.0.addresses.0
     user    = "core"
     timeout = "15m"
   }
